@@ -1,10 +1,6 @@
-# Domoticz Python Plugin for EMS bus Wi-Fi Gateway with Proddy's EMS-ESP firmware
+# Domoticz Python Plugin for Sonoff Mini DIY mode
 # Author: bobzomer@gmail.com
-# https://github.com/bbqkees/ems-esp-domoticz-plugin
-# Proddy's EMS-ESP repository: https://github.com/proddy/EMS-ESP
-# Product Wiki: https://bbqkees-electronics.nl/wiki/
-#
-#
+# https://github.com/bobzomer/sonoff-domoticz-plugin.git
 """
 <plugin key="sonoff-mini" name="Sonoff Mini" version="0.1">
     <description>
@@ -38,7 +34,7 @@ class Sonoff:
     def checkDevices(self):
         if 1 not in Devices:
             Domoticz.Debug("Create Main Switch Device")
-            Domoticz.Device(Name="EMS thermostat current temp", Unit=1, Type=244, Subtype=73).Create()
+            Domoticz.Device(Name="Main Switch Device", Unit=1, Type=244, Subtype=73).Create()
 
     def ask(self, path, **data):
         full_data = {
@@ -90,7 +86,10 @@ class SonoffPlugin:
 
     def onCommand(self, Unit, Command, Level, Color):
         Domoticz.Debug("Command: " + Command + " (" + str(Level))
-        self.controller.onCommand(Unit, Command, Level, Color)
+        try:
+            self.controller.onCommand(Unit, Command, Level, Color)
+        except Exception as exc:
+            Domoticz.Error("Error on command " + Command + " to unit " + str(Unit) + ": " + str(exc))
 
     def onConnect(self, Connection, Status, Description):
         Domoticz.Debug("onConnect called")
