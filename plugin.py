@@ -24,6 +24,8 @@ import Domoticz
 import http.client
 import json
 
+class DeviceIds:
+    MAIN_SWITCH = 1
 
 class Sonoff:
     def __init__(self, host, port):
@@ -32,9 +34,9 @@ class Sonoff:
         self.port = port
 
     def checkDevices(self):
-        if 1 not in Devices:
+        if DeviceIds.MAIN_SWITCH not in Devices:
             Domoticz.Debug("Create Main Switch Device")
-            Domoticz.Device(Name="Main Switch Device", Unit=1, Type=244, Subtype=73).Create()
+            Domoticz.Device(Name="Main Switch Device", Unit=DeviceIds.MAIN_SWITCH, Type=244, Subtype=73).Create()
 
     def ask(self, path, **data):
         full_data = {
@@ -52,7 +54,9 @@ class Sonoff:
         return json.loads(str(ret, encoding='utf8'))
 
     def switch(self, status):
-        self.ask('/zeroconf/switch',  switch="on" if status else "off")
+        statusBool = "on" if status else "off"
+        self.ask('/zeroconf/switch',  switch=statusBool)
+        Devices[DeviceIds.MAIN_SWITCH].Update(nValue=1 if statusBool else 0, sValue=status)
 
     def onCommand(self, unit, command, level, color):
         Domoticz.Log("onCommand called for Unit " + str(unit) + ": Parameter '" + str(command) + "', Level: " + str(level))
