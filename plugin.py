@@ -54,14 +54,14 @@ class Sonoff:
         return json.loads(str(ret, encoding='utf8'))
 
     def switch(self, status):
-        statusBool = "on" if status else "off"
-        self.ask('/zeroconf/switch',  switch=statusBool)
-        Devices[DeviceIds.MAIN_SWITCH].Update(nValue=1 if statusBool else 0, sValue=status)
+        status_str = "on" if status else "off"
+        self.ask('/zeroconf/switch',  switch=status_str)
+        Devices[DeviceIds.MAIN_SWITCH].Update(nValue=1 if status else 0, sValue=status_str)
 
     def onCommand(self, unit, command, level, color):
         Domoticz.Log("onCommand called for Unit " + str(unit) + ": Parameter '" + str(command) + "', Level: " + str(level))
 
-        if unit == 1:
+        if unit == DeviceIds.MAIN_SWITCH:
             self.switch(command.lower() == 'on')
 
 
