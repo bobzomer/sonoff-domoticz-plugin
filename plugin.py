@@ -2,7 +2,8 @@
 # Author: bobzomer@gmail.com
 # https://github.com/bobzomer/sonoff-domoticz-plugin.git
 """
-<plugin key="sonoff-mini" name="Sonoff Mini" version="0.1">
+<plugin key="sonoff-mini" name="Sonoff Mini" version="0.1" author="Bruno Obsomer"
+        externallink="https://sonoff.tech/product/wifi-diy-smart-switches/sonoff-mini">
     <description>
       Plugin to interface with Sonoff Mini devices with official firmware in DIY mode
     </description>
