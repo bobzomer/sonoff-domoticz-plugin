@@ -42,7 +42,7 @@ class Sonoff:
             "data": data
         }
         conn = http.client.HTTPConnection(self.host, self.port)
-        conn.request('PUT', path, json.dumps(full_data), headers={'Content-Type': 'application/json'})
+        conn.request('POST', path, json.dumps(full_data), headers={'Content-Type': 'application/json'})
         response = conn.getresponse()
         if response.status != 200:
             raise Exception(response.reason)
