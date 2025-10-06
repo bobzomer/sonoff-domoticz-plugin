@@ -2,7 +2,7 @@
 # Author: bobzomer@gmail.com
 # https://github.com/bobzomer/sonoff-domoticz-plugin.git
 """
-<plugin key="sonoff-mini" name="Sonoff Mini" version="0.1" author="Bruno Obsomer"
+<plugin key="sonoff-mini" name="Sonoff Mini" version="0.2" author="Bruno Obsomer"
         externallink="https://sonoff.tech/product/wifi-diy-smart-switches/sonoff-mini">
     <description>
       Plugin to interface with Sonoff Mini devices with official firmware in DIY mode
@@ -10,6 +10,7 @@
     <params>
         <param field="Address" label="Sonoff Mini IP address" width="300px" required="true" default="10.10.7.1"/>
         <param field="Port" label="Port" width="300px" required="true" default="8081"/>
+        <param field="Mode1" label="Device ID" width="300px" required="false" default=""/>
         <param field="Mode6" label="Debug" width="75px">
             <options>
                 <option label="Extra verbose" value="Verbose+"/>
@@ -29,8 +30,8 @@ class DeviceIds:
     MAIN_SWITCH = 1
 
 class Sonoff:
-    def __init__(self, host, port):
-        self.device_id = ""
+    def __init__(self, host, port, device_id):
+        self.device_id = device_id
         self.host = host
         self.port = port
 
@@ -56,7 +57,7 @@ class Sonoff:
 
     def switch(self, status):
         status_str = "on" if status else "off"
-        self.ask('/zeroconf/switch',  switch=status_str)
+        self.ask('/zeroconf/switch', switch=status_str)
         Devices[DeviceIds.MAIN_SWITCH].Update(nValue=1 if status else 0, sValue=status_str)
 
     def onCommand(self, unit, command, level, color):
@@ -65,6 +66,11 @@ class Sonoff:
         if unit == DeviceIds.MAIN_SWITCH:
             self.switch(command.lower() == 'on')
 
+    def device_status(self):
+        result = self.ask('/zeroconf/info', data="")
+        status_str = result["data"]["switch"] 
+        status=1 if status_str == 'on' else 0
+        UpdateDevice(DeviceIds.MAIN_SWITCH, status, status_str)
 
 
 class SonoffPlugin:
@@ -80,7 +86,8 @@ class SonoffPlugin:
 
         self.address = Parameters["Address"].replace(" ", "")
         self.port = int(Parameters["Port"].replace(" ", ""))
-        self.controller = Sonoff(self.address, self.port)
+        self.device_id = Parameters["Mode1"].replace(" ", "")
+        self.controller = Sonoff(self.address, self.port, self.device_id)
         self.controller.checkDevices()
 
     def checkDevices(self):
@@ -104,7 +111,7 @@ class SonoffPlugin:
 
     def onHeartbeat(self):
         Domoticz.Debug("onHeartbeat called")
-
+        self.controller.device_status()
 
 global _plugin
 _plugin = SonoffPlugin()
@@ -137,3 +144,21 @@ def onHeartbeat():
     global _plugin
     _plugin.onHeartbeat()
     
+def UpdateDevice(Unit, nValue, sValue, TimedOut=0, AlwaysUpdate=False):
+    if Unit in Devices:
+        if (
+            Devices[Unit].nValue != nValue
+            or Devices[Unit].sValue != sValue
+            or Devices[Unit].TimedOut != TimedOut
+            or AlwaysUpdate
+        ):
+            Devices[Unit].Update(nValue=nValue, sValue=str(sValue), TimedOut=TimedOut)
+            Domoticz.Debug(
+                "Update "
+                + Devices[Unit].Name
+                + ": "
+                + str(nValue)
+                + " - '"
+                + str(sValue)
+                + "'"
+            )
